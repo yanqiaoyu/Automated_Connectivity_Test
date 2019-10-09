@@ -99,6 +99,12 @@ void AvoidMultiRun()
     }
 }
 
+//初始化函数
+void Init(NetInfo *strptr)
+{
+    
+}
+
 int main()
 {
     //防止多重启动
