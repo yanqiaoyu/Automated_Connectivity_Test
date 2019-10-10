@@ -100,9 +100,40 @@ void AvoidMultiRun()
 }
 
 //初始化函数
-void Init(NetInfo *strptr)
+void Init(NetInfo *structptr)
 {
-    
+    //防止SF,先赋值
+
+    //判断MAC地址是否合法
+    while (1)
+    {
+        printf("[%s]:Please input your FAP MAC:\n",__FUNCTION__);
+        scanf("%s", structptr->FAP_MAC);
+        if( CheckMac(structptr->FAP_MAC) == FALSE )
+        {
+            memset(structptr->FAP_MAC, 0, sizeof(structptr->FAP_MAC));           
+        }
+        else
+            break;
+    }
+
+    while (1)
+    {
+        printf("[%s]:Please input your RE MAC:\n",__FUNCTION__);
+        scanf("%s", structptr->RE_MAC);
+        if( CheckMac(structptr->RE_MAC) == FALSE )
+        {
+            memset(structptr->RE_MAC, 0, sizeof(structptr->RE_MAC));   
+        }
+        else
+            break;
+    }
+
+    //TBD:记得尝试一下不配置SSID，只配置BSSID能否成功连接
+    printf("[%s]:Please input your SSID\n",__FUNCTION__);
+    scanf("%s", structptr->SSID);
+    printf("[%s]:Please input your KEY\n",__FUNCTION__);
+    scanf("%s", structptr->KEY);
 }
 
 int main()
@@ -110,29 +141,14 @@ int main()
     //防止多重启动
     AvoidMultiRun();
 
-    //1.获得当前设备的MAC地址,判断MAC地址的合法性
-    //定义数组存储相应信息,并初始化该数组
-    char FAP_MAC[20];
-    char RE_MAC[20];
-    char SSID[128];
-    char KEY[32];
-    memset(FAP_MAC, 0, sizeof(FAP_MAC));
-    memset(RE_MAC, 0, sizeof(RE_MAC));
-    memset(SSID, 0, sizeof(SSID));
-    memset(KEY, 0, sizeof(KEY));
+    //1.初始化(获取信息)
+    struct NetInfo Net_handle;
+    memset(&Net_handle, 0,sizeof(Net_handle));
+    Init(&Net_handle);
 
-    printf("PLZ input FAP MAC\n");
-    scanf("%s", FAP_MAC);
-    printf("PLZ input RE MAC\n");
-    scanf("%s", RE_MAC);
-    printf("PLZ input SSID\n");
-    scanf("%s", SSID);
-    printf("PLZ input KEY\n");
-    scanf("%s", KEY);
+    pause();
 
-    if ( CheckMac(FAP_MAC) == FALSE || CheckMac(RE_MAC) == FALSE )
-        return FALSE;
-
+/*
     //2.扫描周围AP(由于使用的C++的编译工具, void* -> char*需要显式转换
     //最多尝试10次扫描周围AP
     int count_1 = 10;
@@ -169,7 +185,7 @@ int main()
     printf("New network handle:%d\n", i_network_num);
 
     //4.
-    /* To be done: 以当前的网络句柄为基准，遍历之前的数字，全部disable，保证reconncet的时候不会出bug */
+    // To be done: 以当前的网络句柄为基准，遍历之前的数字，全部disable，保证reconncet的时候不会出bug 
 
     //5.建立连接
     //配置SSID
@@ -182,7 +198,7 @@ int main()
     MyShell("wpa_cli -i wlan0 set_network %d bssid %s",i_network_num ,FAP_MAC);
     //使能网络，保存配置
     MyShell("wpa_cli -i wlan0 enable_network %d; wpa_cli -i wlan0 save_config", i_network_num);
-    
+*/    
     //释放文件指针
     close(LOCK_FILE);
     return 0;

@@ -13,3 +13,13 @@
 #define FALSE -1
 
 int LOCK_FILE;
+
+//关键变量的结构体
+struct NetInfo
+{
+    char FAP_MAC[20];
+    char RE_MAC[20];
+    char SSID[128];
+    char KEY[128];
+    
+};
