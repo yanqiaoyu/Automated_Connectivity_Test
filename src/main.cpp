@@ -72,6 +72,7 @@ int RegexEXE(const char *regex_pattern, const char *to_match)
     return match;
 }
 
+//API:给主函数调用的检查MAC合法性
 int CheckMac(const char *mac)
 {
     int match;
@@ -99,11 +100,9 @@ void AvoidMultiRun()
     }
 }
 
-//初始化函数
+//函数:初始化一些必须的变量
 void Init(NetInfo *structptr)
 {
-    //防止SF,先赋值
-
     //判断MAC地址是否合法
     while (1)
     {
@@ -136,20 +135,9 @@ void Init(NetInfo *structptr)
     scanf("%s", structptr->KEY);
 }
 
-int main()
-{
-    //防止多重启动
-    AvoidMultiRun();
-
-    //1.初始化(获取信息)
-    struct NetInfo Net_handle;
-    memset(&Net_handle, 0,sizeof(Net_handle));
-    Init(&Net_handle);
-
-    pause();
-
-/*
-    //2.扫描周围AP(由于使用的C++的编译工具, void* -> char*需要显式转换
+//函数:扫描周围AP
+void Scan(NetInfo *structptr)
+{   
     //最多尝试10次扫描周围AP
     int count_1 = 10;
     while(count_1)
@@ -166,8 +154,8 @@ int main()
         else
         {
             //printf("%s", MyShell("wpa_cli -i wlan0 scan_result | grep '%s'", FAP_MAC));
-            if ( strlen ( (char *)MyShell("wpa_cli -i wlan0 scan_result | grep '%s'", FAP_MAC) )  == 0
-                || strlen ( (char *)MyShell("wpa_cli -i wlan0 scan_result | grep '%s'", RE_MAC) )  == 0
+            if ( strlen ( (char *)MyShell("wpa_cli -i wlan0 scan_result | grep '%s'", structptr->FAP_MAC) )  == 0
+                || strlen ( (char *)MyShell("wpa_cli -i wlan0 scan_result | grep '%s'", structptr->RE_MAC) )  == 0
                )
             {
                 printf("MAC doesn't exist... Retrying \n");
@@ -177,28 +165,68 @@ int main()
             
         }
     }
+}
 
-    //3.添加一个网络
+//新增一个网络,返回句柄
+int AddNetwork()
+{
     //获取新网络句柄
     char *s_network_num = (char *)MyShell("wpa_cli -i wlan0 add_network");
     int i_network_num = atoi(s_network_num);
-    printf("New network handle:%d\n", i_network_num);
+    printf("[%s]:New network handle:%d\n",__FUNCTION__, i_network_num);
+    //Remove掉这个num之前所有的其他网络，防止影响后续的连接
+    for (int i = i_network_num - 1; i >= 0; i--)
+    {
+        MyShell("wpa_cli -i wlan0 remove_network %d", i);
+    }
+    MyShell("wpa_cli -i wlan 0 save_config");
+    
+    return i_network_num;
+}
 
-    //4.
-    // To be done: 以当前的网络句柄为基准，遍历之前的数字，全部disable，保证reconncet的时候不会出bug 
+//配置网络
+void ConfigureNetwork(NetInfo *structptr)
+{
+    //配置SSID
+    MyShell("wpa_cli -i wlan0 set_network %d ssid '\"%s\"'",structptr->Network_num ,structptr->SSID);
+    //配置加密方式,注意，这里写死了
+    MyShell("wpa_cli -i wlan0 set_network %d key_mgmt WPA-PSK",structptr->Network_num);
+    //配置密码
+    MyShell("wpa_cli -i wlan0 set_network %d  psk '\"%s\"'", structptr->Network_num, structptr->KEY);
+    //配置BSSID
+    MyShell("wpa_cli -i wlan0 set_network %d bssid %s",structptr->Network_num ,structptr->FAP_MAC);
+    //使能网络，保存配置
+    MyShell("wpa_cli -i wlan0 enable_network %d; wpa_cli -i wlan0 save_config", structptr->Network_num);
+}
+
+//连接到配置好的网络
+void ConnectNetwork(NetInfo *structptr)
+{
+
+}
+
+int main()
+{
+    //防止多重启动
+    AvoidMultiRun();
+
+    //1.初始化一些必要的变量
+    struct NetInfo Net_handle;
+    memset(&Net_handle, 0,sizeof(Net_handle));
+    Init(&Net_handle);
+
+    //2.扫描周围AP,并判断输入的MAC是否存在于周围环境中
+    Scan(&Net_handle);
+
+    //3.新增网络
+    Net_handle.Network_num = AddNetwork();
+
+    //4.根据所获取的信息配置网络
+    ConfigureNetwork(&Net_handle);
 
     //5.建立连接
-    //配置SSID
-    MyShell("wpa_cli -i wlan0 set_network %d ssid '\"%s\"'",i_network_num ,SSID);
-    //配置加密方式,注意，这里写死了
-    MyShell("wpa_cli -i wlan0 set_network %d key_mgmt WPA-PSK",i_network_num);
-    //配置密码
-    MyShell("wpa_cli -i wlan0 set_network %d  psk '\"%s\"'", i_network_num, KEY);
-    //配置BSSID
-    MyShell("wpa_cli -i wlan0 set_network %d bssid %s",i_network_num ,FAP_MAC);
-    //使能网络，保存配置
-    MyShell("wpa_cli -i wlan0 enable_network %d; wpa_cli -i wlan0 save_config", i_network_num);
-*/    
+    
+
     //释放文件指针
     close(LOCK_FILE);
     return 0;

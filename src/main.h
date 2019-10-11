@@ -21,5 +21,5 @@ struct NetInfo
     char RE_MAC[20];
     char SSID[128];
     char KEY[128];
-    
+    int Network_num;
 };
