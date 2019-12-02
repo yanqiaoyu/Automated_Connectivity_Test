@@ -179,7 +179,7 @@ int AddNetwork()
     {
         MyShell("wpa_cli -i wlan0 remove_network %d", i);
     }
-    MyShell("wpa_cli -i wlan 0 save_config");
+    MyShell("wpa_cli -i wlan0 save_config");
     
     return i_network_num;
 }
