@@ -8,7 +8,7 @@
  - 整套代码基于Linux C，这意味着可以轻松地部署到除了树莓派之外的其余小开发版上，大大提升了**部署的便捷性**
  
 ## 简略流程图 ##
-
+![Image text](https://github.com/yanqiaoyu/Automated_Connectivity_Test/blob/master/picture/1.jpg)
 
 ## 一些需要改进的地方 ##
 - [ ] 清晰地保存Log，能快速得知关联失败的位置
